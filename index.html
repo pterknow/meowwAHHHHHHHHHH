@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Be My Valentine?</title>
+  <style>
+    :root{
+      --pink:#ff5c8a;
+      --pink2:#ff3f76;
+      --card:#ffffff;
+      --text:#333;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      background: linear-gradient(135deg, #0b1a2d, #102540);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--text);
+      overflow:hidden;
+      padding:24px;
+    }
+
+    .card{
+      width:min(520px, 92vw);
+      background:var(--card);
+      padding:38px 28px 32px;
+      border-radius:22px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+      text-align:center;
+      position:relative;
+    }
+
+    .emoji{
+      font-size:52px;
+      line-height:1;
+      margin-bottom:14px;
+      user-select:none;
+    }
+
+    h1{
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: -0.3px;
+    }
+
+    p{
+      margin: 8px 0;
+      font-size:16px;
+      line-height:1.55;
+    }
+
+    .buttons{
+      margin-top:22px;
+      position:relative;
+      height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:16px;
+      user-select:none;
+    }
+
+    button{
+      font-size:16px;
+      padding:12px 22px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      transition: transform .08s ease, background .15s ease;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+      white-space:nowrap;
+    }
+
+    button:active{
+      transform: scale(0.98);
+    }
+
+    .yes{
+      background: var(--pink);
+      color:#fff;
+    }
+    .yes:hover{ background: var(--pink2); }
+
+    .no{
+      background:#efefef;
+      color:#222;
+      position:absolute; /* so it can run away */
+      left: calc(50% + 110px);
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .no:hover{ background:#e3e3e3; }
+
+    .hint{
+      margin-top:12px;
+      font-size:13px;
+      opacity:.7;
+    }
+
+    /* YAY screen */
+    .yay{
+      display:none;
+    }
+    .yay h1{
+      margin-top:10px;
+      font-size:30px;
+    }
+
+    /* confetti */
+    .confetti{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:999;
+      display:none;
+    }
+    .confetti i{
+      position:absolute;
+      top:-12px;
+      width:10px;
+      height:14px;
+      border-radius:2px;
+      opacity:0.95;
+      animation: fall 1.6s linear forwards;
+      transform: rotate(0deg);
+    }
+    @keyframes fall{
+      to{
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 1;
+      }
+    }
+
+    .photo{
+      width:min(360px, 86%);
+      margin: 18px auto 0;
+      border-radius:16px;
+      overflow:hidden;
+      border: 6px solid #fff;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.14);
+      background:#f7f7f7;
+    }
+    .photo img{
+      width:100%;
+      display:block;
+    }
+
+    .small{
+      font-size:14px;
+      opacity:.85;
+      margin-top:10px;
+    }
+
+    .sr-only{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+  <div class="card" id="card">
+    <!-- ASK SCREEN -->
+    <div id="ask">
+      <div class="photo">
+        <img
+          id="askImg"
+          alt="thinkingcat"
+          src="thinkingcat.jpg"
+        />
+      </div>
+      <h1>Celine will you be my Valentine? 🌹</h1>
+
+      <div class="buttons" id="buttons">
+        <button class="yes" id="yesBtn" type="button">Yes💘</button>
+        <button class="no" id="noBtn" type="button" aria-label="No">No 🥺</button>
+      </div>
+
+      <div class="hint">“No” is a little shy 😈</div>
+    </div>
+
+    <!-- YAY SCREEN -->
+    <div class="yay" id="yay">
+      <div class="emoji">😸💙😸</div>
+      <h1>yayy!!! :3</h1>
+      <p></p>
+
+      <!-- Replace the image below with whatever you want (gif, pic, etc.) -->
+      <div class="photo">
+        <img
+          id="yayImg"
+          alt="A fun celebratory image"
+          src="happy-cat.gif"
+        />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const buttons = document.getElementById("buttons");
+    const ask = document.getElementById("ask");
+    const yay = document.getElementById("yay");
+    const confettiWrap = document.getElementById("confetti");
+
+    // --- Make NO run away ---
+    // We'll move the NO button to a random spot inside the .buttons area.
+    function moveNoButton() {
+      const containerRect = buttons.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      const padding = 8;
+      const maxX = containerRect.width - btnRect.width - padding;
+      const maxY = containerRect.height - btnRect.height - padding;
+
+      // If container is too small, just don't move (safety).
+      if (maxX <= 0 || maxY <= 0) return;
+
+      const x = padding + Math.random() * maxX;
+      const y = padding + Math.random() * maxY;
+
+      // position:absolute inside buttons; set left/top in px
+      noBtn.style.left = `${x + btnRect.width / 2}px`;
+      noBtn.style.top = `${y + btnRect.height / 2}px`;
+      noBtn.style.transform = "translate(-50%, -50%)";
+    }
+
+    // Trigger run-away on hover AND when the mouse gets close
+    noBtn.addEventListener("mouseenter", moveNoButton);
+
+    // Also dodge if cursor approaches within a radius
+    buttons.addEventListener("mousemove", (e) => {
+      const noRect = noBtn.getBoundingClientRect();
+      const noCenterX = noRect.left + noRect.width / 2;
+      const noCenterY = noRect.top + noRect.height / 2;
+
+      const dx = e.clientX - noCenterX;
+      const dy = e.clientY - noCenterY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // adjust this number to make it more/less dodge-y
+      const dangerRadius = 90;
+
+      if (dist < dangerRadius) moveNoButton();
+    });
+
+    // On mobile: run away when they try to tap it
+    noBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      moveNoButton();
+    }, { passive: false });
+
+    // Set initial position nicely
+    // (This keeps it aligned even if fonts render slightly different.)
+    window.addEventListener("load", () => {
+      // place it on the right side by default
+      noBtn.style.left = "75%";
+      noBtn.style.top = "50%";
+      noBtn.style.transform = "translate(-50%, -50%)";
+    });
+
+    // --- YES -> YAY screen + confetti ---
+    yesBtn.addEventListener("click", () => {
+      ask.style.display = "none";
+      yay.style.display = "block";
+      popConfetti(120);
+    });
+
+    function popConfetti(count) {
+      confettiWrap.innerHTML = "";
+      confettiWrap.style.display = "block";
+
+      const colors = ["#ff5c8a", "#ffb3c7", "#ffd166", "#6ee7ff", "#b8ffcc", "#c7a6ff"];
+
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement("i");
+        const sizeW = 6 + Math.random() * 10;
+        const sizeH = 8 + Math.random() * 14;
+
+        piece.style.width = sizeW + "px";
+        piece.style.height = sizeH + "px";
+        piece.style.left = (Math.random() * 100) + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = (1.2 + Math.random() * 1.3) + "s";
+        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+        confettiWrap.appendChild(piece);
+      }
+
+      // Hide after a moment
+      setTimeout(() => {
+        confettiWrap.style.display = "none";
+        confettiWrap.innerHTML = "";
+      }, 2200);
+    }
+  </script>
+</body>
+</html>
